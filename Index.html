@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assessment de Procesos · Seidor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0a0f1e; --navy2:#111827; --blue:#2563eb; --cyan:#06b6d4;
+  --bg:#f0ede8; --bg2:#e8e4df; --card:#fff; --td:#0a0f1e;
+  --tm:#4b5563; --tl:#9ca3af; --brd:#d1ccc6; --r:12px; --rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--td);min-height:100vh;display:flex;flex-direction:column}
+
+/* TOPBAR */
+.topbar{background:var(--navy);padding:0 40px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:#fff;letter-spacing:-.5px}
+.logo-dot{width:28px;height:28px;background:linear-gradient(135deg,#3b82f6,var(--cyan));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.toplbl{font-size:11px;color:var(--tl);letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace}
+
+/* PROGRESS NAV */
+.nav{background:var(--navy2);padding:0 20px;height:44px;display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,.06);overflow-x:auto}
+.ns{display:flex;align-items:center;padding:0 20px;font-size:12px;font-weight:500;color:rgba(255,255,255,.3);white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;flex-shrink:0}
+.ns.active{color:#fff;border-bottom-color:var(--blue)}
+.ns.done{color:var(--cyan)}
+.ns.done::after{content:'✓';font-size:10px;background:var(--cyan);color:var(--navy);width:14px;height:14px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;margin-left:6px}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;align-items:center;padding:44px 20px 110px}
+.sw{width:100%;max-width:780px;display:none;animation:fu .3s ease}
+.sw.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* HEADERS */
+.stag{font-family:'DM Mono',monospace;font-size:11px;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:500}
+.stitle{font-size:28px;font-weight:700;letter-spacing:-.8px;line-height:1.15;margin-bottom:8px}
+.sdesc{font-size:14px;color:var(--tm);margin-bottom:28px;line-height:1.65;max-width:600px}
+.shdr{font-size:11px;font-weight:700;color:var(--tm);letter-spacing:.8px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--brd);margin-top:28px}
+.shdr:first-of-type{margin-top:0}
+
+/* DIMENSION BADGE */
+.dim-badge{display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;margin-bottom:14px;font-family:'DM Mono',monospace}
+
+/* CARD */
+.qc{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:22px 24px 24px;margin-bottom:14px;transition:box-shadow .2s}
+.qc:hover{box-shadow:0 4px 18px rgba(0,0,0,.07)}
+.qn{font-size:15px;font-weight:600;color:var(--td);margin-bottom:6px;line-height:1.45}
+.qhint{font-size:12px;color:var(--tl);margin-bottom:14px;line-height:1.5;font-style:italic}
+
+/* RADIO PILLS */
+.ropts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.rb{padding:9px 18px;border-radius:100px;border:1.5px solid var(--brd);background:var(--bg);font-size:13px;font-weight:500;color:var(--tm);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.rb:hover{border-color:var(--tm);color:var(--td)}
+.rb.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* CHECKBOX */
+.ckopts{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.ckb{padding:11px 14px;border-radius:var(--rs);border:1.5px solid var(--brd);background:var(--bg);font-size:13px;font-weight:500;color:var(--tm);cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:12px;font-family:'DM Sans',sans-serif;line-height:1.4}
+.ckb *{pointer-events:none}
+.ckicon{width:18px;height:18px;border-radius:4px;border:2px solid var(--brd);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:transparent;transition:all .15s;margin-top:1px}
+.ckb.sel{background:#f0f4ff;border-color:var(--blue);color:var(--td)}
+.ckb.sel .ckicon{background:var(--blue);border-color:var(--blue);color:#fff}
+.ck-limit{font-size:11px;color:var(--tl);margin-top:8px;font-style:italic}
+
+/* CHECKBOX CARD (expanded style) */
+.ckcard{padding:16px;border-radius:var(--rs);border:1.5px solid var(--brd);background:var(--bg);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-family:'DM Sans',sans-serif}
+.ckcard:hover{border-color:var(--tm)}
+.ckcard.sel{background:#f0f4ff;border-color:var(--blue)}
+.ckcard.sel .ckicon{background:var(--blue);border-color:var(--blue);color:#fff}
+.ckcard *{pointer-events:none}
+.ckcard-row{display:flex;align-items:center;gap:10px;width:100%}
+.ckcard-label{font-size:14px;font-weight:600;color:var(--td)}
+.ckcard-desc{font-size:12px;color:var(--tm);padding-left:28px}
+
+/* TEXT INPUT */
+.si{width:100%;border:1.5px solid var(--brd);border-radius:var(--rs);padding:12px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--td);background:var(--bg);transition:border-color .2s;outline:none;margin-top:4px}
+.si:focus{border-color:var(--blue);background:#fff}
+.si::placeholder{color:var(--tl)}
+.ti{width:100%;border:1.5px solid var(--brd);border-radius:var(--rs);padding:12px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--td);background:var(--bg);resize:vertical;min-height:80px;transition:border-color .2s;outline:none;margin-top:4px}
+.ti:focus{border-color:var(--blue);background:#fff}
+.ti::placeholder{color:var(--tl)}
+
+/* FORM GRID */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg.full{grid-column:1/-1}
+.fl{font-size:11px;font-weight:700;color:var(--tm);letter-spacing:.6px;text-transform:uppercase}
+.req{color:var(--blue)}
+
+/* BOTTOM BAR */
+.bbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--brd);padding:14px 40px;display:flex;align-items:center;justify-content:space-between;z-index:50}
+.pinfo{font-size:12px;color:var(--tl);font-family:'DM Mono',monospace}
+.pwrap{flex:1;max-width:220px;height:3px;background:var(--bg2);border-radius:10px;margin:0 20px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:10px;transition:width .4s ease}
+.bgrp{display:flex;gap:10px}
+.bbk{padding:11px 22px;border-radius:var(--rs);border:1.5px solid var(--brd);background:transparent;font-size:14px;font-weight:500;color:var(--tm);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.bbk:hover{border-color:var(--tm);color:var(--td)}
+.bnx{padding:11px 28px;border-radius:var(--rs);border:none;background:var(--navy);font-size:14px;font-weight:600;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.bnx:hover{background:#1a2540}
+.bnx.pr{background:linear-gradient(135deg,var(--blue),var(--cyan))}
+
+/* INTRO */
+.ititle{font-size:40px;font-weight:700;letter-spacing:-2px;line-height:1;margin-bottom:14px}
+.ititle span{color:var(--blue)}
+.idesc{font-size:15px;color:var(--tm);line-height:1.7;max-width:540px;margin-bottom:28px}
+.ipills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
+.ipill{padding:6px 14px;border-radius:100px;background:var(--navy);color:#fff;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px}
+.ipill .d{opacity:.5}
+.bstart{padding:14px 32px;border-radius:var(--rs);border:none;background:var(--navy);font-size:15px;font-weight:600;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;display:inline-flex;align-items:center;gap:10px}
+.bstart:hover{background:#1a2540;transform:translateY(-1px)}
+
+/* FINAL */
+.final-wrap{text-align:center;padding:40px 20px}
+.final-icon{font-size:56px;margin-bottom:18px}
+.final-title{font-size:26px;font-weight:700;letter-spacing:-.8px;margin-bottom:10px}
+.final-empresa{display:inline-block;background:var(--navy);color:#fff;padding:7px 18px;border-radius:100px;font-size:13px;font-weight:600;margin-bottom:20px}
+.final-desc{font-size:14px;color:var(--tm);line-height:1.7;max-width:480px;margin:0 auto 28px}
+.btn-csv{padding:14px 32px;border-radius:var(--rs);border:none;background:var(--navy);font-size:15px;font-weight:600;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:10px;transition:all .2s}
+.btn-csv:hover{background:#1a2540;transform:translateY(-1px)}
+.csv-note{font-size:12px;color:var(--tm);margin-top:14px;line-height:1.7;max-width:460px;margin-left:auto;margin-right:auto}
+.char-counter{font-size:11px;color:var(--tl);text-align:right;margin-top:6px;font-family:'DM Mono',monospace;transition:color .2s}
+.char-counter.warn{color:#f59e0b}
+.char-counter.over{color:#ef4444;font-weight:700}
+
+/* RADIO CARD (infra/estandar) */
+.rcard-opts{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.rcard{padding:16px;border-radius:var(--rs);border:1.5px solid var(--brd);background:var(--bg);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-family:'DM Sans',sans-serif}
+.rcard:hover{border-color:var(--tm)}
+.rcard.sel{background:#f0f4ff;border-color:var(--blue)}
+.rcard.sel .ckicon{background:var(--blue);border-color:var(--blue);color:#fff}
+.rcard *{pointer-events:none}
+.rcard-row{display:flex;align-items:center;gap:10px;width:100%}
+.rcard .ckicon{flex-shrink:0}
+.rcard-label{font-size:14px;font-weight:600;color:var(--td)}
+.rcard-desc{font-size:12px;color:var(--tm);padding-left:28px}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .topbar,.nav{padding:0 14px}
+  .main{padding:24px 12px 110px}
+  .ititle{font-size:28px}
+  .fgrid{grid-template-columns:1fr}
+  .bbar{padding:12px 16px}
+  .pwrap{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo"><div class="logo-dot">S</div>SEIDOR</div>
+  <div class="toplbl">Pre-evaluación · 2026</div>
+</header>
+
+<nav class="nav">
+  <div class="ns active" id="nav-0">Inicio</div>
+  <div class="ns" id="nav-1">Su empresa</div>
+  <div class="ns" id="nav-2">Diagnóstico</div>
+  <div class="ns" id="nav-3">Listo</div>
+</nav>
+
+<main class="main">
+
+<!-- ══════════════════════════════════
+     STEP 0 · BIENVENIDA
+══════════════════════════════════ -->
+<section class="sw active" id="step-0">
+  <div style="max-width:780px;width:100%;padding-top:8px">
+    <div class="stag">Pre-evaluación de Procesos de Negocio</div>
+    <h1 class="ititle">Assessment<br><span>de Procesos</span></h1>
+    <p class="idesc">Completar este formulario nos ayuda a preparar una reunión de relevamiento más enfocada y productiva. Son 2 secciones breves — no tarda más de 10 minutos.</p>
+    <div class="ipills">
+      <div class="ipill">📋 <span class="d">Sección 1 — Su empresa</span></div>
+      <div class="ipill">🔍 <span class="d">Sección 2 — Diagnóstico</span></div>
+      <div class="ipill">⏱ <span class="d">Menos de 10 minutos</span></div>
+    </div>
+    <button class="bstart" onclick="goTo(1)">Comenzar →</button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     STEP 1 · SU EMPRESA
+══════════════════════════════════ -->
+<section class="sw" id="step-1">
+  <div class="stag">Sección 1 de 2</div>
+  <h2 class="stitle">Su empresa</h2>
+  <p class="sdesc">Datos de contacto y dimensionamiento básico de la organización.</p>
+
+  <div class="shdr">Datos de contacto</div>
+  <div class="fgrid">
+    <div class="fg full">
+      <label class="fl">Empresa / Razón Social <span class="req">*</span></label>
+      <input class="si" id="f-empresa" type="text" placeholder="Nombre legal de la organización">
+    </div>
+    <div class="fg full">
+      <label class="fl">Actividad principal <span class="req">*</span></label>
+      <input class="si" id="f-actividad" type="text" placeholder="Sector o rubro de la empresa">
+    </div>
+    <div class="fg">
+      <label class="fl">Nombre y Apellido <span class="req">*</span></label>
+      <input class="si" id="f-nombre" type="text" placeholder="Nombre completo">
+    </div>
+    <div class="fg">
+      <label class="fl">Cargo</label>
+      <input class="si" id="f-cargo" type="text" placeholder="Posición en la empresa">
+    </div>
+    <div class="fg">
+      <label class="fl">Email <span class="req">*</span></label>
+      <input class="si" id="f-email" type="email" placeholder="correo@empresa.com">
+    </div>
+    <div class="fg">
+      <label class="fl">Teléfono</label>
+      <input class="si" id="f-tel" type="tel" placeholder="+54 9 11 xxxx xxxx">
+    </div>
+    <div class="fg">
+      <label class="fl">Responsable Seidor</label>
+      <input class="si" id="f-seidor" type="text" placeholder="Consultor asignado">
+    </div>
+  </div>
+
+  <div class="shdr">Dimensionamiento</div>
+
+  <div class="qc">
+    <div class="qn">¿Cuántos usuarios operarán habitualmente en el sistema? <span class="req">*</span></div>
+    <div class="qhint">Incluya a todos los que necesitarán acceso — ventas, depósito, administración, dirección, etc.</div>
+    <div class="ropts" id="q-usuarios">
+      <div class="rb" onclick="rsel(this,'q-usuarios','1 a 5')">1 a 5</div>
+      <div class="rb" onclick="rsel(this,'q-usuarios','6 a 15')">6 a 15</div>
+      <div class="rb" onclick="rsel(this,'q-usuarios','16 a 30')">16 a 30</div>
+      <div class="rb" onclick="rsel(this,'q-usuarios','31 a 60')">31 a 60</div>
+      <div class="rb" onclick="rsel(this,'q-usuarios','Más de 60')">Más de 60</div>
+    </div>
+  </div>
+
+  <div class="qc">
+    <div class="qn">Volumen mensual de comprobantes emitidos</div>
+    <div class="qhint">Facturas, remitos, notas de crédito/débito emitidas por su empresa al mes.</div>
+    <div class="ropts" id="q-comprobantes">
+      <div class="rb" onclick="rsel(this,'q-comprobantes','Menos de 500')">Menos de 500</div>
+      <div class="rb" onclick="rsel(this,'q-comprobantes','500 a 5.000')">500 a 5.000</div>
+      <div class="rb" onclick="rsel(this,'q-comprobantes','5.000 a 50.000')">5.000 a 50.000</div>
+      <div class="rb" onclick="rsel(this,'q-comprobantes','Más de 50.000')">Más de 50.000</div>
+    </div>
+  </div>
+
+  <div class="qc">
+    <div class="qn">Facturación anual estimada — categorización ARCA 2026</div>
+    <div class="ropts" id="q-facturacion">
+      <div class="rb" onclick="rsel(this,'q-facturacion','Micro — hasta $1.738M')">Micro — hasta $1.738M</div>
+      <div class="rb" onclick="rsel(this,'q-facturacion','Pequeña — hasta $12.380M')">Pequeña — hasta $12.380M</div>
+      <div class="rb" onclick="rsel(this,'q-facturacion','Mediana T1 — hasta $58.848M')">Mediana T1 — hasta $58.848M</div>
+      <div class="rb" onclick="rsel(this,'q-facturacion','Mediana T2 — hasta $84.070M')">Mediana T2 — hasta $84.070M</div>
+      <div class="rb" onclick="rsel(this,'q-facturacion','Enterprise — más de $150.000M')">Enterprise — más de $150.000M</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════════
+     STEP 2 · DIAGNÓSTICO
+══════════════════════════════════ -->
+<section class="sw" id="step-2">
+  <div class="stag">Sección 2 de 2</div>
+  <h2 class="stitle">Diagnóstico</h2>
+  <p class="sdesc">Preguntas sobre cómo opera su empresa hoy. No hay respuestas correctas — cada una nos ayuda a preparar una propuesta ajustada a su realidad.</p>
+
+  <!-- D2 · Complejidad Operativa -->
+  <div class="dim-badge">📦 Complejidad operativa</div>
+
+  <div class="qc">
+    <div class="qn">¿Operan con una sola empresa (CUIT) o necesitan gestionar varias?</div>
+    <div class="ropts" id="q-empresas">
+      <div class="rb" onclick="rsel(this,'q-empresas','Una sola empresa')">Una sola empresa</div>
+      <div class="rb" onclick="rsel(this,'q-empresas','Varias empresas del mismo grupo')">Varias empresas del grupo</div>
+      <div class="rb" onclick="rsel(this,'q-empresas','Sucursales o depósitos en distintas ubicaciones')">Sucursales / depósitos</div>
+      <div class="rb" onclick="rsel(this,'q-empresas','Combinación de empresas y sucursales')">Combinación</div>
+    </div>
+  </div>
+
+  <div class="qc">
+    <div class="qn">¿Cuál es la naturaleza de su inventario?</div>
+    <div class="qhint">Puede seleccionar más de una opción.</div>
+    <div class="ckopts" id="q-inventario">
+      <div class="ckb" onclick="ck(this,'q-inventario','No tenemos inventario — somos una empresa de servicios')">
+        <div class="ckicon">✓</div>No tenemos inventario — somos una empresa de servicios
+      </div>
+      <div class="ckb" onclick="ck(this,'q-inventario','Compramos y vendemos producto terminado')">
+        <div class="ckicon">✓</div>Compramos y vendemos producto terminado
+      </div>
+      <div class="ckb" onclick="ck(this,'q-inventario','Fabricamos o transformamos materia prima')">
+        <div class="ckicon">✓</div>Fabricamos o transformamos materia prima
+      </div>
+      <div class="ckb" onclick="ck(this,'q-inventario','Manejamos trazabilidad crítica — lotes, vencimientos o números de serie')">
+        <div class="ckicon">✓</div>Manejamos trazabilidad crítica — lotes, vencimientos o números de serie
+      </div>
+    </div>
+  </div>
+
+  <div class="qc">
+    <div class="qn">¿Cómo se conecta el negocio con el exterior?</div>
+    <div class="qhint">Puede seleccionar más de una opción.</div>
+    <div class="ckopts" id="q-exterior">
+      <div class="ckb" onclick="ck(this,'q-exterior','Operamos 100% en el mercado local')">
+        <div class="ckicon">✓</div>Operamos 100% en el mercado local
+      </div>
+      <div class="ckb" onclick="ck(this,'q-exterior','Importamos insumos o bienes')">
+        <div class="ckicon">✓</div>Importamos insumos o bienes
+      </div>
+      <div class="ckb" onclick="ck(this,'q-exterior','Exportamos productos o servicios')">
+        <div class="ckicon">✓</div>Exportamos productos o servicios
+      </div>
+      <div class="ckb" onclick="ck(this,'q-exterior','Somos filial o subsidiaria de una empresa extranjera')">
+        <div class="ckicon">✓</div>Somos filial o subsidiaria de una empresa extranjera
+      </div>
+    </div>
+  </div>
+
+  <!-- D3 · Ecosistema Digital -->
+  <div class="dim-badge" style="margin-top:28px">🔗 Ecosistema digital e integraciones</div>
+
+  <div class="qc">
+    <div class="qn">¿El sistema de gestión deberá integrarse con plataformas externas?</div>
+    <div class="qhint">Puede seleccionar más de una opción.</div>
+    <div class="ckopts" id="q-integraciones">
+      <div class="ckb" onclick="ck(this,'q-integraciones','No — operamos de forma independiente')">
+        <div class="ckicon">✓</div>No — operamos de forma independiente
+      </div>
+      <div class="ckb" onclick="ck(this,'q-integraciones','Sí — con tienda online o marketplaces (MercadoLibre, etc.)')">
+        <div class="ckicon">✓</div>Sí — con tienda online o marketplaces (MercadoLibre, etc.)
+      </div>
+      <div class="ckb" onclick="ck(this,'q-integraciones','Sí — con portales de clientes o proveedores')">
+        <div class="ckicon">✓</div>Sí — con portales de clientes o proveedores
+      </div>
+      <div class="ckb" onclick="ck(this,'q-integraciones','Sí — con sistemas especializados como WMS, CRM externo o POS')">
+        <div class="ckicon">✓</div>Sí — con sistemas especializados como WMS, CRM externo o POS
+      </div>
+    </div>
+  </div>
+
+  <!-- D4 · Situación Actual -->
+  <div class="dim-badge" style="margin-top:28px">⚡ Situación actual y dolores</div>
+
+  <div class="qc">
+    <div class="qn">¿Cómo está distribuida su información de gestión hoy?</div>
+    <div class="qhint">Puede seleccionar más de una opción.</div>
+    <div class="ckopts" id="q-situacion">
+      <div class="ckcard" onclick="ck(this,'q-situacion','Usamos un solo sistema pero ya nos queda chico')">
+        <div class="ckcard-row"><div class="ckicon">✓</div><strong class="ckcard-label">📦 Un solo sistema que ya nos queda chico</strong></div>
+        <div class="ckcard-desc">Tenemos sistema pero no cubre todas nuestras necesidades actuales.</div>
+      </div>
+      <div class="ckcard" onclick="ck(this,'q-situacion','Varios sistemas desconectados entre sí')">
+        <div class="ckcard-row"><div class="ckicon">✓</div><strong class="ckcard-label">🔀 Varios sistemas desconectados entre sí</strong></div>
+        <div class="ckcard-desc">Usamos distintas herramientas que no se comunican — hay doble carga y pérdida de información.</div>
+      </div>
+      <div class="ckcard" onclick="ck(this,'q-situacion','Dependemos fuertemente de planillas Excel')">
+        <div class="ckcard-row"><div class="ckicon">✓</div><strong class="ckcard-label">📊 Dependemos fuertemente de planillas Excel</strong></div>
+        <div class="ckcard-desc">El Excel cubre procesos clave — reportes, stock, ventas o contabilidad fuera del sistema.</div>
+      </div>
+      <div class="ckcard" onclick="ck(this,'q-situacion','No tenemos sistema — todo es manual')">
+        <div class="ckcard-row"><div class="ckicon">✓</div><strong class="ckcard-label">📝 No tenemos sistema — todo es manual</strong></div>
+        <div class="ckcard-desc">Los procesos se gestionan en papel, por teléfono o de memoria.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qc">
+    <div class="qn">¿Dónde siente que la empresa pierde más tiempo o tiene más errores?</div>
+    <div class="qhint">Seleccione hasta 3 opciones.</div>
+    <div class="ckopts" id="q-dolores">
+      <div class="ckb" onclick="ckMax(this,'q-dolores',3,'Facturación y respuesta de ARCA / AFIP')">
+        <div class="ckicon">✓</div>Facturación y respuesta de ARCA / AFIP
+      </div>
+      <div class="ckb" onclick="ckMax(this,'q-dolores',3,'Control de stock y quiebres de inventario')">
+        <div class="ckicon">✓</div>Control de stock y quiebres de inventario
+      </div>
+      <div class="ckb" onclick="ckMax(this,'q-dolores',3,'Conciliación bancaria y gestión de pagos')">
+        <div class="ckicon">✓</div>Conciliación bancaria y gestión de pagos
+      </div>
+      <div class="ckb" onclick="ckMax(this,'q-dolores',3,'Armado de reportes para la dirección')">
+        <div class="ckicon">✓</div>Armado de reportes para la dirección
+      </div>
+      <div class="ckb" onclick="ckMax(this,'q-dolores',3,'Control de costos de producción o proyectos')">
+        <div class="ckicon">✓</div>Control de costos de producción o proyectos
+      </div>
+      <div class="ckb" onclick="ckMax(this,'q-dolores',3,'Coordinación entre áreas — ventas, depósito, administración')">
+        <div class="ckicon">✓</div>Coordinación entre áreas — ventas, depósito, administración
+      </div>
+    </div>
+    <div class="ck-limit">Máximo 3 opciones</div>
+  </div>
+
+  <div class="qc">
+    <div class="qn">¿Cómo calificaría la dependencia actual de procesos manuales o aprobaciones en papel?</div>
+    <div class="ropts" id="q-manuales">
+      <div class="rb" onclick="rsel(this,'q-manuales','Baja — la mayoría está digitalizado')">Baja — la mayoría digitalizado</div>
+      <div class="rb" onclick="rsel(this,'q-manuales','Moderada — algunos procesos se frenan')">Moderada — algunos se frenan</div>
+      <div class="rb" onclick="rsel(this,'q-manuales','Alta — necesitamos workflows estrictos de aprobación')">Alta — necesitamos workflows</div>
+    </div>
+  </div>
+
+  <!-- D5 · Estrategia IT -->
+  <div class="dim-badge" style="margin-top:28px">☁️ Estrategia tecnológica</div>
+
+  <div class="qc">
+    <div class="qn">¿Cuál es la postura de su empresa respecto a la infraestructura tecnológica?</div>
+    <div class="rcard-opts" id="q-infra">
+      <div class="rcard" onclick="rsel(this,'q-infra','Cloud SaaS — que SAP maneje todo')">
+        <div class="rcard-row"><div class="ckicon">✓</div><strong class="rcard-label">☁️ Cloud 100% SaaS</strong></div>
+        <div class="rcard-desc">SAP se encarga de las actualizaciones e infraestructura. Nosotros solo usamos el sistema.</div>
+      </div>
+      <div class="rcard" onclick="rsel(this,'q-infra','On-Premise / Private Cloud — control propio')">
+        <div class="rcard-row"><div class="ckicon">✓</div><strong class="rcard-label">🖥️ On-Premise / Nube Privada</strong></div>
+        <div class="rcard-desc">Necesitamos controlar nuestro entorno, las actualizaciones y la base de datos.</div>
+      </div>
+      <div class="rcard" onclick="rsel(this,'q-infra','No lo sabemos aún')">
+        <div class="rcard-row"><div class="ckicon">✓</div><strong class="rcard-label">🤔 Aún no lo hemos definido</strong></div>
+        <div class="rcard-desc">No tenemos una postura definida todavía — nos guiaríamos por la recomendación del consultor.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qc">
+    <div class="qn">¿Qué tan dispuestos están a adaptar sus procesos al estándar de SAP?</div>
+    <div class="qhint">Esto impacta directamente en los tiempos y costos de implementación.</div>
+    <div class="rcard-opts" id="q-estandar">
+      <div class="rcard" onclick="rsel(this,'q-estandar','Totalmente — queremos ordenarnos según el estándar')">
+        <div class="rcard-row"><div class="ckicon">✓</div><strong class="rcard-label">✅ Adoptamos el estándar SAP</strong></div>
+        <div class="rcard-desc">Queremos ordenar nuestros procesos según las mejores prácticas de SAP.</div>
+      </div>
+      <div class="rcard" onclick="rsel(this,'q-estandar','Parcialmente — nuestros procesos centrales son únicos')">
+        <div class="rcard-row"><div class="ckicon">✓</div><strong class="rcard-label">⚙️ Nuestros procesos son únicos</strong></div>
+        <div class="rcard-desc">Algunos procesos críticos son específicos de nuestro negocio y el sistema debe adaptarse a ellos.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comentario libre -->
+  <div class="qc">
+    <div class="qn">¿Hay algo más que quiera que el equipo de Seidor sepa antes de la reunión?</div>
+    <textarea class="ti" id="q-comentario" maxlength="1000" oninput="countChars(this,'cnt-comentario',1000)" placeholder="Plazos, proyectos en curso, decisiones ya tomadas, contexto adicional…"></textarea>
+    <div class="char-counter" id="cnt-comentario">0 / 1.000 caracteres</div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════════
+     STEP 3 · FINALIZACIÓN
+══════════════════════════════════ -->
+<section class="sw" id="step-3">
+  <div class="final-wrap">
+    <div class="final-icon">✅</div>
+    <h2 class="final-title">¡Formulario completado!</h2>
+    <div class="final-empresa" id="fin-empresa">—</div>
+    <p class="final-desc">Gracias por completar la pre-evaluación. Descargá el archivo CSV e importalo en la pestaña <strong>📥 Respuestas</strong> del Excel de Assessment para que el motor de evaluación genere el scoring automáticamente.</p>
+    <button class="btn-csv" onclick="downloadCSV()">⬇ Descargar CSV para el Excel</button>
+    <p class="csv-note">
+      El CSV se pega en la fila 3 en adelante de la hoja <strong>📥 Respuestas</strong>.<br>
+      Luego ir a <strong>📊 Evaluación</strong> y verificar el número de fila en la celda D3.<br>
+      La hoja <strong>📄 Salida Word</strong> genera automáticamente los valores para copiar al template de Word.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<!-- BOTTOM BAR -->
+<div class="bbar" id="bbar" style="display:none">
+  <div class="pinfo" id="pinfo">Sección 1 de 2</div>
+  <div class="pwrap"><div class="pfill" id="pfill" style="width:0%"></div></div>
+  <div class="bgrp">
+    <button class="bbk" id="bbk" onclick="back()" style="display:none">← Anterior</button>
+    <button class="bnx" id="bnx" onclick="next()">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+var step = 0;
+var R = {};   // single-choice answers:  key → value
+var MA = {};  // multi-choice answers:   key → [values]
+
+// ─── INTERACTION ─────────────────────────────────────────────────────────────
+function rsel(el, id, v) {
+  document.getElementById(id).querySelectorAll('.rb,.rcard').forEach(function(x){ x.classList.remove('sel'); });
+  el.classList.add('sel');
+  R[id] = v;
+}
+
+function ck(el, id, v) {
+  el.classList.toggle('sel');
+  if (!MA[id]) MA[id] = [];
+  var i = MA[id].indexOf(v);
+  if (i === -1) MA[id].push(v);
+  else MA[id].splice(i, 1);
+}
+
+function ckMax(el, id, max, v) {
+  if (!MA[id]) MA[id] = [];
+  if (!el.classList.contains('sel') && MA[id].length >= max) return;
+  ck(el, id, v);
+}
+
+function countChars(ta, id, max) {
+  var len = ta.value.length;
+  var el = document.getElementById(id);
+  el.textContent = len.toLocaleString('es-AR') + ' / 1.000 caracteres';
+  el.classList.remove('warn','over');
+  if (len >= max) el.classList.add('over');
+  else if (len >= max * 0.85) el.classList.add('warn');
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function goTo(s) { step = s; render(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function next() {
+  if (step === 1) {
+    var e = document.getElementById('f-empresa').value.trim();
+    var n = document.getElementById('f-nombre').value.trim();
+    var m = document.getElementById('f-email').value.trim();
+    if (!e || !n || !m) { alert('Por favor completá Empresa, Nombre y Email para continuar.'); return; }
+    if (!R['q-usuarios']) { alert('Por favor indicá la cantidad de usuarios.'); return; }
+  }
+  if (step === 2) {
+    document.getElementById('fin-empresa').textContent =
+      document.getElementById('f-empresa').value.trim() || 'Su empresa';
+  }
+  goTo(step + 1);
+}
+
+function back() { if (step > 1) goTo(step - 1); }
+
+function render() {
+  document.querySelectorAll('.sw').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('step-' + step).classList.add('active');
+
+  ['nav-0','nav-1','nav-2','nav-3'].forEach(function(id, i) {
+    var el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if (i === step) el.classList.add('active');
+    else if (i < step) el.classList.add('done');
+  });
+
+  var bar = document.getElementById('bbar');
+  if (step === 0 || step === 3) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  document.getElementById('pfill').style.width = (step === 1 ? 33 : 66) + '%';
+  document.getElementById('pinfo').textContent = 'Sección ' + step + ' de 2';
+  document.getElementById('bbk').style.display = step > 1 ? 'block' : 'none';
+  var bn = document.getElementById('bnx');
+  if (step === 2) { bn.textContent = 'Finalizar →'; bn.className = 'bnx pr'; }
+  else { bn.textContent = 'Siguiente →'; bn.className = 'bnx'; }
+}
+
+// ─── CSV EXPORT ───────────────────────────────────────────────────────────────
+// Column order MUST match 📥 Respuestas sheet exactly:
+// empresa, actividad, nombre, cargo, email, telefono, responsable_seidor,
+// usuarios, facturacion, comprobantes_mes, empresas_cuits,
+// inventario, comercio_exterior, integraciones, situacion_actual,
+// dolor_1, dolor_2, dolor_3, procesos_manuales, estrategia_it, adopcion_estandar,
+// comentario, fecha_completado
+
+function csvEsc(v) {
+  if (v === null || v === undefined) return '';
+  var s = String(v).replace(/"/g, '""');
+  if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\r') !== -1 || s.indexOf('\n') !== -1)
+    return '"' + s + '"';
+  return s;
+}
+
+function downloadCSV() {
+  var dolores = MA['q-dolores'] || [];
+  var inv     = (MA['q-inventario']   || []).join(' | ');
+  var sit     = (MA['q-situacion']    || []).join(' | ');
+  var integ   = (MA['q-integraciones']|| []).join(' | ');
+  var ext     = (MA['q-exterior']     || []).join(' | ');
+  var fecha   = new Date().toISOString().split('T')[0];
+
+  var headers = [
+    'empresa','actividad','nombre','cargo','email','telefono','responsable_seidor',
+    'usuarios','facturacion','comprobantes_mes',
+    'empresas_cuits','inventario','comercio_exterior','integraciones',
+    'situacion_actual',
+    'dolor_1','dolor_2','dolor_3',
+    'procesos_manuales','estrategia_it','adopcion_estandar',
+    'comentario','fecha_completado'
+  ];
+
+  var values = [
+    document.getElementById('f-empresa').value.trim(),
+    document.getElementById('f-actividad').value.trim(),
+    document.getElementById('f-nombre').value.trim(),
+    document.getElementById('f-cargo').value.trim(),
+    document.getElementById('f-email').value.trim(),
+    document.getElementById('f-tel').value.trim(),
+    document.getElementById('f-seidor').value.trim(),
+    R['q-usuarios']     || '',
+    R['q-facturacion']  || '',
+    R['q-comprobantes'] || '',
+    R['q-empresas']     || '',
+    inv,
+    ext,
+    integ,
+    sit,
+    dolores[0] || '',
+    dolores[1] || '',
+    dolores[2] || '',
+    R['q-manuales']  || '',
+    R['q-infra']     || '',
+    R['q-estandar']  || '',
+    (document.getElementById('q-comentario').value || '').substring(0, 1000).trim(),
+    fecha
+  ];
+
+  var csv = '\uFEFF' + headers.map(csvEsc).join(',') + '\r\n' +
+                       values.map(csvEsc).join(',')   + '\r\n';
+
+  var slug = (document.getElementById('f-empresa').value.trim() || 'assessment')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zA-Z0-9 ]/g,'').trim()
+    .replace(/\s+/g,'_').substring(0,30);
+
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'seidor_assessment_' + slug + '_' + fecha + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
